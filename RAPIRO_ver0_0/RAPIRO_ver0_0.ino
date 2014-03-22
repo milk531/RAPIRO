@@ -1,3 +1,7 @@
+//Original code by Shota Ishiwatari can be found at www.kiluck.co.jp/rapiro/RAPIRO_ver0_0.ino or www.rapiro.com/downloads/ or https://github.com/Ishiwatari/RAPIRO
+//Modified using work done by stefba_b and djakku from this thread: http://forum.rapiro.com/thread/21/
+//evilbluechickens 032114
+
 #include <Servo.h>
 
 #define SHIFT 7
@@ -6,7 +10,7 @@
 #define B 2          // Blue LED
 #define TIME 15      // Column of Time
 #define MAXSN 12     // Max Number of Servos
-#define MAXMN 10     // Max Number of Motions
+#define MAXMN 11     // Max Number of Motions
 #define MAXFN 8      // Max Number of Frames 
 #define POWER 17     // Servo power supply control pin
 #define ERR -1       // Error
@@ -17,18 +21,18 @@ Servo servo[MAXSN];
 uint8_t eyes[3] = { 0, 0, 0};
 
 // Fine angle adjustments (degrees)
-int trim[MAXSN] = { 0,  // Head yaw
-                    0,  // Waist yaw
-                    0,  // R Sholder roll
+int trim[MAXSN] = { 2,  // Head yaw
+                    4,  // Waist yaw
+                    6,  // R Sholder roll
                     0,  // R Sholder pitch
                     0,  // R Hand grip
                     0,  // L Sholder roll
-                    0,  // L Sholder pitch
+                    8,  // L Sholder pitch
                     0,  // L Hand grip
-                    0,  // R Foot yaw
-                    0,  // R Foot pitch
-                    0,  // L Foot yaw
-                    0}; // L Foot pitch
+                    7,  // R Foot yaw
+                    2,  // R Foot pitch
+                    6,  // L Foot yaw
+                    10}; // L Foot pitch
 
 int nowAngle[MAXSN] =        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
 int targetAngle[MAXSN] =     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
@@ -151,6 +155,16 @@ uint8_t motion[MAXMN][MAXFN][16]={
   { 40,140, 90, 70, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,255, 25},
   { 90, 90,  0, 90, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,  0,  0},
   { 90, 90,  0, 90, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,  0,  0}
+},
+{  // 10 Sports
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0, 10},
+  { 45, 45, 45, 85, 90,180, 50, 90, 90, 90, 90, 90,128,  0,  0, 10},
+  {  0,  0, 90, 40, 90,180, 50, 90, 90, 90, 90, 90,  0,128,  0, 10},
+  { 45, 45, 45, 85, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,128, 10},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,255,128,  0, 10},
+  {135,135,  0,130, 90,135, 95, 90, 90, 90, 90, 90,  0,255,128, 10},
+  {180,180,  0,130, 90, 90,140, 90, 90, 90, 90, 90,128,  0,255, 10},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0, 10}
 }
 };
 
@@ -192,6 +206,7 @@ void setup()  {
 
 void loop()  {
   int buf = ERR;
+  int valbuf = 0;
   if(Serial.available()) {
     if(Serial.read() == '#') {
       while(!Serial.available()){}
@@ -199,14 +214,28 @@ void loop()  {
         case 'M':
           buf = readOneDigit();
           if(buf != ERR){
-            motionNumber = buf;
-            mode = 'M';
-            digitalWrite(POWER, HIGH);
-            Serial.print("#M");
-            Serial.print(motionNumber);
-          } else {
-            Serial.print("#EM");
-          }
+			valbuf = buf *10;
+			buf = readOneDigit();
+			if(buf != ERR) {
+			  valbuf += buf;
+			  if(0 <= valbuf && valbuf < MAXMN) {
+			    motionNumber = valbuf;
+                mode = 'M';
+                digitalWrite(POWER, HIGH);
+                Serial.print("#M");
+                Serial.println(motionNumber);
+			  } else {
+                                motionNumber = 0;
+				Serial.println("#EM");
+			  }
+			} else {
+                            motionNumber = 0;
+                            Serial.println("#EM");
+            }
+		  } else {
+                      motionNumber = 0;
+                      Serial.println("#EM");
+		  }
         break;
         case 'P':
           buf = getPose();
@@ -243,6 +272,10 @@ void loop()  {
           } else {
             Serial.print("0");
           }
+        break;
+        case 'H':
+          Serial.print("#H");
+          digitalWrite(POWER, LOW);
         break;
         default:
           Serial.print("#E");
