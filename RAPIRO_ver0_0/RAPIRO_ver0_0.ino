@@ -1,16 +1,17 @@
 //Original code by Shota Ishiwatari can be found at www.kiluck.co.jp/rapiro/RAPIRO_ver0_0.ino or www.rapiro.com/downloads/ or https://github.com/Ishiwatari/RAPIRO
 //Modified using work done by stefba_b and djakku from this thread: http://forum.rapiro.com/thread/21/
 //evilbluechickens 032114
-
+//oga 03302114  A)nalogRead, V)ersion
 #include <Servo.h>
 
+#define VERSION    "00"
 #define SHIFT 7
 #define R 0          // Red LED
 #define G 1          // Green LED
 #define B 2          // Blue LED
 #define TIME 15      // Column of Time
 #define MAXSN 12     // Max Number of Servos
-#define MAXMN 11     // Max Number of Motions
+#define MAXMN 10     // Max Number of Motions
 #define MAXFN 8      // Max Number of Frames 
 #define POWER 17     // Servo power supply control pin
 #define ERR -1       // Error
@@ -21,19 +22,18 @@ Servo servo[MAXSN];
 uint8_t eyes[3] = { 0, 0, 0};
 
 // Fine angle adjustments (degrees)
-int trim[MAXSN] = { 2,  // Head yaw
+int trim[MAXSN] = { -3,  // Head yaw +left/-right
                     4,  // Waist yaw
-                    6,  // R Sholder roll
+                    7,  // R Sholder roll  + mae
                     0,  // R Sholder pitch
-                    0,  // R Hand grip
+                    6,  // R Hand grip + hiraku
                     0,  // L Sholder roll
-                    8,  // L Sholder pitch
-                    0,  // L Hand grip
-                    7,  // R Foot yaw
-                    2,  // R Foot pitch
-                    6,  // L Foot yaw
-                    10}; // L Foot pitch
-
+                    0,  // L Sholder pitch
+                   -6,  // L Hand grip  - hiraku
+                   -6,  // R Foot yaw  -uchi
+                   -9,  // R Foot pitch -uchigawa
+                    7,  // L Foot yaw
+                   -2}; // L Foot pitch -soto
 int nowAngle[MAXSN] =        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
 int targetAngle[MAXSN] =     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
 int deltaAngle[MAXSN] =      { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
@@ -54,6 +54,9 @@ uint8_t bufferTime = 0;                // Motion buffer time (0.1sec)
 uint8_t motionNumber = 0;
 uint8_t frameNumber = 0;
 char mode = 'M';
+double aval;
+int portNumber = 6;
+
 
 uint8_t motion[MAXMN][MAXFN][16]={
 {  // 0 Stop
@@ -155,7 +158,8 @@ uint8_t motion[MAXMN][MAXFN][16]={
   { 40,140, 90, 70, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,255, 25},
   { 90, 90,  0, 90, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,  0,  0},
   { 90, 90,  0, 90, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,  0,  0}
-},
+}
+/*
 {  // 10 Sports
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0, 10},
   { 45, 45, 45, 85, 90,180, 50, 90, 90, 90, 90, 90,128,  0,  0, 10},
@@ -166,6 +170,7 @@ uint8_t motion[MAXMN][MAXFN][16]={
   {180,180,  0,130, 90, 90,140, 90, 90, 90, 90, 90,128,  0,255, 10},
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0, 10}
 }
+*/
 };
 
 void setup()  {
@@ -214,28 +219,30 @@ void loop()  {
         case 'M':
           buf = readOneDigit();
           if(buf != ERR){
-			valbuf = buf *10;
-			buf = readOneDigit();
-			if(buf != ERR) {
-			  valbuf += buf;
-			  if(0 <= valbuf && valbuf < MAXMN) {
-			    motionNumber = valbuf;
+            valbuf = buf *10;
+            buf = readOneDigit();
+            if(buf != ERR) {
+              valbuf += buf;
+              if(0 <= valbuf && valbuf < MAXMN) {
+                motionNumber = valbuf;
                 mode = 'M';
+
                 digitalWrite(POWER, HIGH);
                 Serial.print("#M");
                 Serial.println(motionNumber);
-			  } else {
+              } else {
                                 motionNumber = 0;
-				Serial.println("#EM");
-			  }
-			} else {
+                Serial.println("#EM");
+              }
+            } else {
                             motionNumber = 0;
                             Serial.println("#EM");
             }
-		  } else {
+          } else {
                       motionNumber = 0;
                       Serial.println("#EM");
-		  }
+          }
+
         break;
         case 'P':
           buf = getPose();
@@ -276,6 +283,25 @@ void loop()  {
         case 'H':
           Serial.print("#H");
           digitalWrite(POWER, LOW);
+        break;
+        case 'A':
+          buf = readOneDigit();
+          if(buf != ERR){
+            portNumber = buf;
+            aval = analogRead(portNumber);
+            Serial.print("#A");
+            Serial.print(portNumber);
+            Serial.print("V");
+            Serial.print(int(aval));
+              //delay(300);
+            } else {
+              Serial.print("#EA");
+            }
+        break;
+        case 'V':
+
+          Serial.print("#Ver");
+          Serial.print(VERSION);
         break;
         default:
           Serial.print("#E");
