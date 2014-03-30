@@ -1,8 +1,10 @@
 //Original code by Shota Ishiwatari can be found at www.kiluck.co.jp/rapiro/RAPIRO_ver0_0.ino or www.rapiro.com/downloads/ or https://github.com/Ishiwatari/RAPIRO
 //Modified using work done by stefba_b and djakku from this thread: http://forum.rapiro.com/thread/21/
 //evilbluechickens 032114
-//oga 03302114  A)nalogRead, V)ersion
+//oga 03302014  A)nalogRead, V)ersion
+//oga 03302014 PROGMEM motion data move to flash
 #include <Servo.h>
+#include <avr/pgspace.h>
 
 #define VERSION    "00"
 #define SHIFT 7
@@ -11,7 +13,7 @@
 #define B 2          // Blue LED
 #define TIME 15      // Column of Time
 #define MAXSN 12     // Max Number of Servos
-#define MAXMN 10     // Max Number of Motions
+#define MAXMN 11     // Max Number of Motions
 #define MAXFN 8      // Max Number of Frames 
 #define POWER 17     // Servo power supply control pin
 #define ERR -1       // Error
@@ -58,7 +60,19 @@ double aval;
 int portNumber = 6;
 
 
-uint8_t motion[MAXMN][MAXFN][16]={
+uint8_t motion[MAXFN][16]=
+{  // 0 Stop
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,255, 10},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
+  { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0}
+};
+
+PROGMEM prog_uchar motion_rom[MAXMN][MAXFN][16]={
 {  // 0 Stop
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,255, 10},
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
@@ -158,8 +172,7 @@ uint8_t motion[MAXMN][MAXFN][16]={
   { 40,140, 90, 70, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,255, 25},
   { 90, 90,  0, 90, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,  0,  0},
   { 90, 90,  0, 90, 90,180, 90, 90, 90, 90, 90, 90,  0,  0,  0,  0}
-}
-/*
+},
 {  // 10 Sports
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0, 10},
   { 45, 45, 45, 85, 90,180, 50, 90, 90, 90, 90, 90,128,  0,  0, 10},
@@ -170,7 +183,6 @@ uint8_t motion[MAXMN][MAXFN][16]={
   {180,180,  0,130, 90, 90,140, 90, 90, 90, 90, 90,128,  0,255, 10},
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0, 10}
 }
-*/
 };
 
 void setup()  {
@@ -191,7 +203,7 @@ void setup()  {
   eyes[B] = 3;           // Blue LED of eyes
   
   for( i = 0; i < MAXSN; i++) {
-    targetAngle[i] = motion[0][0][i] << SHIFT;
+    targetAngle[i] = motion[0][i] << SHIFT;
     nowAngle[i] = targetAngle[i];
     servo[i].write((nowAngle[i] >> SHIFT) + trim[i]);
   }
@@ -332,17 +344,20 @@ void loop()  {
 
 //Motion Play
 void nextFrame() {
+  cpMotion(motionNumber);
   frameNumber++;
   if(frameNumber >= MAXFN) {
     frameNumber = 0;
   }
   for(i = 0; i < MAXSN; i++) {
-    bufferAngle[i] = motion[motionNumber][frameNumber][i];
+    bufferAngle[i] = motion[frameNumber][i];
   }
   for( i = 0; i < 3; i++) {
-    bufferBright[i] = motion[motionNumber][frameNumber][MAXSN+i];
+    //cpMotion(motionNumber);
+    bufferBright[i] = motion[frameNumber][MAXSN+i];
   }
-  bufferTime = motion[motionNumber][frameNumber][TIME];
+    //cpMotion(motionNumber);
+  bufferTime = motion[frameNumber][TIME];
   
   nextPose();
 }
@@ -514,4 +529,12 @@ int readOneDigit() {
     buf = ERR;
   }
   return buf;
+}
+void cpMotion(int MN) {
+//PROGMEM prog_uchar motion_rom[MAXMN][MAXFN][16]={
+  for (int i=0; i< MAXFN; i++){
+    for (int j=0; j<16; j++){
+      motion[i][j] = pgm_read_byte(&motion_rom[MN][i][j]);
+    }
+  }
 }
