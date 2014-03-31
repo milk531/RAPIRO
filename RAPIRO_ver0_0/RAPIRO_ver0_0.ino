@@ -5,6 +5,7 @@
 //oga 03302014 PROGMEM motion data move to flash
 #include <Servo.h>
 #include <avr/pgspace.h>
+#include "user_trim.h"
 
 #define VERSION    "00"
 #define SHIFT 7
@@ -24,18 +25,20 @@ Servo servo[MAXSN];
 uint8_t eyes[3] = { 0, 0, 0};
 
 // Fine angle adjustments (degrees)
-int trim[MAXSN] = { -3,  // Head yaw +left/-right
-                    4,  // Waist yaw
-                    7,  // R Sholder roll  + mae
+/*
+int trim[MAXSN] = { 0,  // Head yaw
+                    0,  // Waist yaw
+                    0,  // R Sholder roll
                     0,  // R Sholder pitch
-                    6,  // R Hand grip + hiraku
+                    0,  // R Hand grip
                     0,  // L Sholder roll
                     0,  // L Sholder pitch
-                   -6,  // L Hand grip  - hiraku
-                   -6,  // R Foot yaw  -uchi
-                   -9,  // R Foot pitch -uchigawa
-                    7,  // L Foot yaw
-                   -2}; // L Foot pitch -soto
+                    0,  // L Hand grip
+                    0,  // R Foot yaw
+                    0,  // R Foot pitch
+                    0,  // L Foot yaw
+                    0}; // L Foot pitch
+*/
 int nowAngle[MAXSN] =        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
 int targetAngle[MAXSN] =     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
 int deltaAngle[MAXSN] =      { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initialize array to 0
@@ -60,7 +63,7 @@ double aval;
 int portNumber = 6;
 
 
-uint8_t motion[MAXFN][16]=
+uint8_t motion[MAXFN][16]=pi
 {  // 0 Stop
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,255, 10},
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
@@ -72,7 +75,7 @@ uint8_t motion[MAXFN][16]=
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0}
 };
 
-PROGMEM prog_uchar motion_rom[MAXMN][MAXFN][16]={
+PROGMEM prog_uint8_t motion_rom[MAXMN][MAXFN][16]={
 {  // 0 Stop
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,255, 10},
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
@@ -237,6 +240,7 @@ void loop()  {
               valbuf += buf;
               if(0 <= valbuf && valbuf < MAXMN) {
                 motionNumber = valbuf;
+                cpMotion(motionNumber);
                 mode = 'M';
 
                 digitalWrite(POWER, HIGH);
@@ -344,7 +348,7 @@ void loop()  {
 
 //Motion Play
 void nextFrame() {
-  cpMotion(motionNumber);
+  //cpMotion(motionNumber);
   frameNumber++;
   if(frameNumber >= MAXFN) {
     frameNumber = 0;
