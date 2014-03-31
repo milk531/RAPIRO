@@ -63,7 +63,7 @@ double aval;
 int portNumber = 6;
 
 
-uint8_t motion[MAXFN][16]=pi
+uint8_t motion[MAXFN][16]=
 {  // 0 Stop
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,255, 10},
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},

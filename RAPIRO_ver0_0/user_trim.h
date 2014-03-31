@@ -1,4 +1,4 @@
-//#define MAXSN 12        // Max Number of Servos
+#define MAXSN 12        // Max Number of Servos
 // Fine angle adjustments (degrees)
 int trim[MAXSN] = { 0,  // Head yaw
                     0,  // Waist yaw
