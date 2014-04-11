@@ -1,6 +1,6 @@
 Rapiro firmware
 ===============
-#The difference between original  firmware and  this  firmware. 
+##The difference between original  firmware and  this  firmware. 
  1. Motion No. is 2 digits #Mnn. (evilbluechickens-san ) 
  2. Added Servo off command #H. (evilbluechickens-san )
  3. Added Read Analog port. #An
