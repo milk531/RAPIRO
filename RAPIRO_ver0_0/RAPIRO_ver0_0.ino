@@ -4,7 +4,6 @@
 //oga 03302014  A)nalogRead, V)ersion
 //oga 03302014 PROGMEM motion data move to flash
 #include <Servo.h>
-#include <avr/pgspace.h>
 #include "user_trim.h"
 
 #define VERSION    "00"
@@ -75,7 +74,7 @@ uint8_t motion[MAXFN][16]=
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0}
 };
 
-PROGMEM prog_uint8_t motion_rom[MAXMN][MAXFN][16]={
+const uint8_t motion_rom[MAXMN][MAXFN][16]={
 {  // 0 Stop
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,255, 10},
   { 90, 90,  0,130, 90,180, 50, 90, 90, 90, 90, 90,  0,  0,  0,  0},
