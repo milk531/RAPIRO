@@ -8,7 +8,7 @@ Rapiro firmware
  5. Motion data moved to Flash. Some motions can be added.
  6. User trim data was separated into include file.
 
-|       |default | This |
+|       |default | V00 |
 |-------|-------|------|
 |STOP   | #M0   | #M00 |
 |Foward | #M1   | #M01 |
